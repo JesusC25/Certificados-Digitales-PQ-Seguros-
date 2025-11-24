@@ -1,11 +1,6 @@
 """
 Simulador de Dilithium3 (CRYSTALS-Dilithium / FIPS 204 ML-DSA)
 
-IMPORTANTE: Esta es una simulación educativa para el prototipo.
-En un entorno de producción, usar la implementación oficial:
-    pip install pqcrypto
-    from pqcrypto.sign.dilithium3 import generate_keypair, sign, verify
-
 Tamaños según FIPS 204:
 - Clave pública: 1952 bytes
 - Clave privada: 4000 bytes
@@ -44,8 +39,6 @@ class DilithiumSimulator:
     def sign(message: bytes, private_key: bytes) -> bytes:
         """
         Firma un mensaje usando la clave privada
-        
-        Extrae la semilla de la clave privada y genera la firma.
         """
         # Extraer semilla (primeros 32 bytes de la clave privada)
         seed = private_key[:32]
@@ -58,8 +51,6 @@ class DilithiumSimulator:
     def verify(message: bytes, signature: bytes, public_key: bytes) -> bool:
         """
         Verifica la firma de un mensaje
-        
-        Extrae la semilla de la clave pública y regenera la firma esperada.
         """
         if len(signature) != 3293:
             return False

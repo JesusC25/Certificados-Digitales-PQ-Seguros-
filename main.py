@@ -16,7 +16,6 @@ from src.examples import (
 
 
 def limpiar_pantalla():
-    """Limpia la pantalla según el sistema operativo"""
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
@@ -41,12 +40,10 @@ def mostrar_menu():
 
 
 def esperar_enter():
-    """Espera a que el usuario presione Enter"""
     input("\nPresiona Enter para volver al menú...")
 
 
 def guardar_certificados(root, cert, nombre_caso=""):
-    """Guarda los certificados en archivos JSON"""
     os.makedirs("output", exist_ok=True)
     
     if nombre_caso:
@@ -71,7 +68,6 @@ def guardar_certificados(root, cert, nombre_caso=""):
 
 
 def ejecutar_prueba(opcion):
-    """Ejecuta la prueba seleccionada"""
     limpiar_pantalla()
     
     if opcion == 0:
@@ -178,7 +174,7 @@ def main():
             opcion = int(opcion)
             
             if opcion < 0 or opcion > 9:
-                print("\n⚠ Opción inválida. Por favor selecciona un número entre 0 y 9.")
+                print("\n Opción inválida. Por favor selecciona un número entre 0 y 9.")
                 esperar_enter()
                 continue
             

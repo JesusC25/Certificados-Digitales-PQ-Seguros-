@@ -8,7 +8,6 @@ from src.certificate import Certificate
 
 
 class CertificateAuthority:
-    """Autoridad Certificadora"""
     
     def __init__(self, cn: str = "Root CA PQ", o: str = "Proyecto PKI", c: str = "CO"):
         self.cn = cn
