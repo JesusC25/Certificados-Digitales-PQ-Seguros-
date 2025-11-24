@@ -11,7 +11,6 @@ from src.certificate import Certificate
 
 
 def ejemplo_simple_verificacion():
-
     print("EJEMPLO SIMPLE DE VERIFICACIÓN")
     print("=" * 60)
     
@@ -81,12 +80,16 @@ def caso_valido():
     return root, cert
 
 
-def caso_invalido_1_fecha_expirada(root):
+def caso_invalido_1_fecha_expirada():
     """
     CASO INVÁLIDO 1: Fecha inválida (expirado)
     """
     print("\nCASO INVÁLIDO 1: Certificado expirado")
     print("=" * 60)
+    
+    # Crear CA completa
+    ca = CertificateAuthority()
+    root = ca.create_root_certificate()
     
     # Crear certificado con fechas en el pasado
     pk, sk = DilithiumSimulator.generate_keypair()
@@ -103,11 +106,8 @@ def caso_invalido_1_fecha_expirada(root):
     cert.set_extensions(False, ["digitalSignature"])
     cert.add_authority_key_identifier(root.extensions["subjectKeyIdentifier"])
     
-    # Firmar con clave privada de CA real
-    from src.ca import CertificateAuthority
-    temp_ca = CertificateAuthority()
-    temp_ca.root_certificate = root
-    cert.sign(temp_ca.private_key)
+    # Firmar con clave privada correcta de la CA
+    cert.sign(ca.private_key)
     
     # Validar
     validator = CertificateValidator([root])
@@ -117,14 +117,20 @@ def caso_invalido_1_fecha_expirada(root):
     print(f"Expiró: {cert.validity['notAfter']}")
     print(f"Resultado: {is_valid}")
     print(f"Mensaje: {msg}")
+    
+    return root, cert
 
 
-def caso_invalido_2_issuer_no_coincide(root):
+def caso_invalido_2_issuer_no_coincide():
     """
     CASO INVÁLIDO 2: Issuer no coincide con subject de CA
     """
     print("\nCASO INVÁLIDO 2: Issuer no coincide")
     print("=" * 60)
+    
+    # Crear CA legítima
+    ca = CertificateAuthority()
+    root = ca.create_root_certificate()
     
     pk, sk = DilithiumSimulator.generate_keypair()
     
@@ -153,14 +159,23 @@ def caso_invalido_2_issuer_no_coincide(root):
     print(f"Subject de la CA: {root.subject['CN']}")
     print(f"Resultado: {is_valid}")
     print(f"Mensaje: {msg}")
+    
+    return root, cert
 
 
-def caso_invalido_3_firma_invalida(root, cert_original):
+def caso_invalido_3_firma_invalida():
     """
     CASO INVÁLIDO 3: Firma inválida (Dilithium.Verify retorna falso)
     """
     print("\nCASO INVÁLIDO 3: Firma inválida (certificado modificado)")
     print("=" * 60)
+    
+    # Crear CA y certificado válido
+    ca = CertificateAuthority()
+    root = ca.create_root_certificate()
+    
+    pk, sk = DilithiumSimulator.generate_keypair()
+    cert_original = ca.issue_end_entity_certificate("server.ejemplo.com", pk)
     
     # Modificar un campo del certificado
     tampered = Certificate.from_dict(cert_original.to_dict())
@@ -175,6 +190,8 @@ def caso_invalido_3_firma_invalida(root, cert_original):
     print(f"Firma: {tampered.signature_value[:40]}...")
     print(f"Resultado: {is_valid}")
     print(f"Mensaje: {msg}")
+    
+    return root, tampered
 
 
 def caso_invalido_4_ca_no_confiada():
@@ -205,15 +222,21 @@ def caso_invalido_4_ca_no_confiada():
     print(f"CA en trust store: {root_legitima.subject['CN']}")
     print(f"Resultado: {is_valid}")
     print(f"Mensaje: {msg}")
+    
+    return root_falsa, cert_falso
 
 
-def caso_invalido_5_extensiones_violadas(root):
+def caso_invalido_5_extensiones_violadas():
     """
     CASO INVÁLIDO 5: Extensiones violadas
     Certificado de entidad final con keyUsage=keyCertSign
     """
     print("\nCASO INVÁLIDO 5: Extensiones violadas")
     print("=" * 60)
+    
+    # Crear CA completa
+    ca = CertificateAuthority()
+    root = ca.create_root_certificate()
     
     pk, sk = DilithiumSimulator.generate_keypair()
     
@@ -232,10 +255,8 @@ def caso_invalido_5_extensiones_violadas(root):
     cert.set_extensions(False, ["digitalSignature", "keyCertSign"])
     cert.add_authority_key_identifier(root.extensions["subjectKeyIdentifier"])
     
-    # Firmar
-    temp_ca = CertificateAuthority()
-    temp_ca.root_certificate = root
-    cert.sign(temp_ca.private_key)
+    # Firmar con clave privada correcta de la CA
+    cert.sign(ca.private_key)
     
     # Validar
     validator = CertificateValidator([root])
@@ -247,14 +268,20 @@ def caso_invalido_5_extensiones_violadas(root):
     print(f"Problema: Entidad final (CA=FALSE) no puede tener keyCertSign")
     print(f"Resultado: {is_valid}")
     print(f"Mensaje: {msg}")
+    
+    return root, cert
 
 
-def caso_invalido_6_formato_corrupto(root):
+def caso_invalido_6_formato_corrupto():
     """
     CASO INVÁLIDO 6: Formato de certificado inválido o corrupto
     """
     print("\nCASO INVÁLIDO 6: Formato corrupto")
     print("=" * 60)
+    
+    # Crear CA completa
+    ca = CertificateAuthority()
+    root = ca.create_root_certificate()
     
     # Crear certificado con firma corrupta
     pk, sk = DilithiumSimulator.generate_keypair()
@@ -283,6 +310,8 @@ def caso_invalido_6_formato_corrupto(root):
     print(f"Problema: Firma no es Base64 válido")
     print(f"Resultado: {is_valid}")
     print(f"Mensaje: {msg}")
+    
+    return root, cert
 
 
 def ejecutar_todos_los_casos():
@@ -297,24 +326,24 @@ def ejecutar_todos_los_casos():
     root, cert = caso_valido()
     
     # 6 casos inválidos
-    caso_invalido_1_fecha_expirada(root)
-    caso_invalido_2_issuer_no_coincide(root)
-    caso_invalido_3_firma_invalida(root, cert)
+    caso_invalido_1_fecha_expirada()
+    caso_invalido_2_issuer_no_coincide()
+    caso_invalido_3_firma_invalida()
     caso_invalido_4_ca_no_confiada()
-    caso_invalido_5_extensiones_violadas(root)
-    caso_invalido_6_formato_corrupto(root)
+    caso_invalido_5_extensiones_violadas()
+    caso_invalido_6_formato_corrupto()
     
     # Resumen
     print("\n" + "=" * 60)
     print("RESUMEN DE CASOS")
     print("=" * 60)
-    print(" Caso válido: Certificado correcto")
-    print(" Caso inválido 1: Fecha expirada")
-    print(" Caso inválido 2: Issuer no coincide")
-    print(" Caso inválido 3: Firma inválida")
-    print(" Caso inválido 4: CA no confiada")
-    print(" Caso inválido 5: Extensiones violadas")
-    print(" Caso inválido 6: Formato corrupto")
+    print(" ✓ Caso válido: Certificado correcto")
+    print(" ✓ Caso inválido 1: Fecha expirada")
+    print(" ✓ Caso inválido 2: Issuer no coincide")
+    print(" ✓ Caso inválido 3: Firma inválida")
+    print(" ✓ Caso inválido 4: CA no confiada")
+    print(" ✓ Caso inválido 5: Extensiones violadas")
+    print(" ✓ Caso inválido 6: Formato corrupto")
     print()
     
     return root, cert
